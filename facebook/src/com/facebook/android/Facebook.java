@@ -33,6 +33,7 @@ import android.content.pm.Signature;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 
 /**
@@ -181,6 +182,7 @@ public class Facebook {
     public void authorize(Activity activity, String[] permissions,
             int activityCode, final DialogListener listener) {
 
+    	Log.i("friendly", "authorize called");
         boolean singleSignOnStarted = false;
 
         mAuthDialogListener = listener;
@@ -289,11 +291,16 @@ public class Facebook {
      *            not require any permissions, pass an empty String array.
      */
 	private void startDialogAuth(Activity activity, String[] permissions) {
+		Log.i("friendly", "startDialogAuth called");
         Bundle params = new Bundle();
         if (permissions.length > 0) {
             params.putString("scope", TextUtils.join(",", permissions));
         }
         CookieSyncManager.createInstance(activity);
+        CookieSyncManager.getInstance().sync();
+        Log.i("FACEBOOK DIALOGAUTH", "cookie "+CookieManager.getInstance().getCookie("facebook.com"));
+        Log.i("FACEBOOK DIALOGAUTH", "getAccessToken "+getAccessToken());
+        Log.i("FACEBOOK DIALOGAUTH", "getAccessExpiresIn "+getAccessExpires());
         dialog(activity, LOGIN, params, new DialogListener() {
 
             public void onComplete(Bundle values) {
@@ -301,6 +308,10 @@ public class Facebook {
                 CookieSyncManager.getInstance().sync();
                 setAccessToken(values.getString(TOKEN));
                 setAccessExpiresIn(values.getString(EXPIRES));
+                Log.i("FACEBOOK COMPLETE", "cookie "+CookieManager.getInstance().getCookie("facebook.com"));
+                Log.i("FACEBOOK COMPLETE", "setAccessToken "+values.getString(TOKEN));
+                Log.i("FACEBOOK COMPLETE", "setAccessExpiresIn "+values.getString(EXPIRES));
+                
                 if (isSessionValid()) {
                     Log.d("Facebook-authorize", "Login Success! access_token="
                             + getAccessToken() + " expires="

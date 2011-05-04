@@ -31,6 +31,8 @@ import android.util.Log;
 import android.view.Display;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
@@ -120,7 +122,9 @@ public class FbDialog extends Dialog {
 
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            Log.d("Facebook-WebView", "Redirect URL: " + url);
+        	CookieSyncManager.getInstance().sync();
+        	Log.d("Facebook-WebView-Override", "Cookie: " + CookieManager.getInstance().getCookie("facebook.com"));
+            Log.d("Facebook-WebView-Override", "Redirect URL: " + url);
             if (url.startsWith(Facebook.REDIRECT_URI)) {
                 Bundle values = Util.parseUrl(url);
 
@@ -164,7 +168,10 @@ public class FbDialog extends Dialog {
 
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
-            Log.d("Facebook-WebView", "Webview loading URL: " + url);
+        	CookieSyncManager.getInstance().sync();
+        	Log.d("Facebook-WebView-pageStarted", "Cookie: " + CookieManager.getInstance().getCookie("facebook.com"));
+            Log.d("Facebook-WebView-pageStarted", "Redirect URL: " + url);
+            Log.d("Facebook-WebView-pageStarted", "Webview loading URL: " + url);
             super.onPageStarted(view, url, favicon);
             mSpinner.show();
         }

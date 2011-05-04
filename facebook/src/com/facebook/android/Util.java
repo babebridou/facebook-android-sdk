@@ -60,7 +60,7 @@ public final class Util {
         StringBuilder sb = new StringBuilder();
 
         for (String key : parameters.keySet()) {
-            if (parameters.getByteArray(key) != null) {
+            if (!(parameters.get(key) instanceof String) && parameters.get(key) instanceof byte[] && parameters.getByteArray(key) != null) {
                 continue;
             }
 
@@ -152,9 +152,9 @@ public final class Util {
         if (!method.equals("GET")) {
             Bundle dataparams = new Bundle();
             for (String key : params.keySet()) {
-                if (params.getByteArray(key) != null) {
-                        dataparams.putByteArray(key, params.getByteArray(key));
-                }
+	                if (!(params.get(key) instanceof String) && params.get(key) instanceof byte[] && params.getByteArray(key) != null) {
+	                        dataparams.putByteArray(key, params.getByteArray(key));
+	                }
             }
 
             // use method override
