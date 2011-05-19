@@ -18,6 +18,8 @@ package com.facebook.android;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 
 import android.Manifest;
@@ -34,6 +36,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.CookieSyncManager;
+import android.widget.Toast;
 
 /**
  * Main Facebook object for interacting with the Facebook developer API.
@@ -179,7 +182,7 @@ public class Facebook {
      *            canceled.
      */
     public void authorize(Activity activity, String[] permissions,
-            int activityCode, final DialogListener listener) {
+            int activityCode, final DialogListener listener, Bundle params) {
 
         boolean singleSignOnStarted = false;
 
@@ -192,10 +195,19 @@ public class Facebook {
         }
         // Otherwise fall back to traditional dialog.
         if (!singleSignOnStarted) {
-            startDialogAuth(activity, permissions);
+        	if(params!=null){
+        		startDialogAuth(activity, permissions, params);
+        	} else {
+        		startDialogAuth(activity, permissions);
+        	}
         }
     }
 
+    public void authorize(Activity activity, String[] permissions,
+            int activityCode, final DialogListener listener) {
+    	authorize(activity, permissions, activityCode, listener, null);
+    }
+    
     /**
      * Internal method to handle single sign-on backend for authorize().
      *
@@ -276,6 +288,11 @@ public class Facebook {
         return false;
     }
 
+    // same but we provide a bundle as cherry on top
+    private void startDialogAuth(Activity activity, String[] permissions) {
+        Bundle params = new Bundle();
+        startDialogAuth(activity, permissions, params);
+    }
     /**
      * Internal method to handle dialog-based authentication backend for
      * authorize().
@@ -288,8 +305,7 @@ public class Facebook {
      *            A list of permissions required for this application. If you do
      *            not require any permissions, pass an empty String array.
      */
-	private void startDialogAuth(Activity activity, String[] permissions) {
-        Bundle params = new Bundle();
+	private void startDialogAuth(Activity activity, String[] permissions, Bundle params) {
         if (permissions.length > 0) {
             params.putString("scope", TextUtils.join(",", permissions));
         }
@@ -615,7 +631,55 @@ public class Facebook {
             Util.showAlert(context, "Error",
                     "Application requires permission to access the Internet");
         } else {
-            new FbDialog(context, url, listener).show();
+        	if(parameters.containsKey("customFbDialogClass")){
+        		String customFbDialogClass = parameters.getString("customFbDialogClass");
+        		boolean success = true;
+        		if(!parameters.containsKey("customFbDialogId")){
+        			success = false;
+        		} else {
+        			int dialogId = Integer.parseInt(parameters.getString("customFbDialogId"));
+	        		try {
+						Method meth = Class.forName(customFbDialogClass).getMethod("createAndShowDialog", int.class, Context.class, String.class, DialogListener.class);
+						meth.invoke(null, dialogId, context, url, listener);
+					} catch (ClassNotFoundException e) {
+						//dump error
+						Toast.makeText(context,  "class "+customFbDialogClass+" not found!", Toast.LENGTH_LONG);
+						e.printStackTrace();
+						success=false;
+					} catch (SecurityException e) {
+						//dump error
+						Toast.makeText(context,  "security problem with method "+customFbDialogClass+".createDialog!", Toast.LENGTH_LONG);
+						e.printStackTrace();
+						success=false;
+					} catch (NoSuchMethodException e) {
+						//dump error
+						Toast.makeText(context,  "method "+customFbDialogClass+".createDialog not found!", Toast.LENGTH_LONG);
+						e.printStackTrace();
+						success=false;
+					} catch (IllegalArgumentException e) {
+						//dump error
+						Toast.makeText(context,  "IllegalArgumentException "+customFbDialogClass+".createDialog not found!", Toast.LENGTH_LONG);
+						e.printStackTrace();
+						success=false;
+					} catch (IllegalAccessException e) {
+						//dump error
+						Toast.makeText(context,  "IllegalAccessException "+customFbDialogClass+".createDialog not found!", Toast.LENGTH_LONG);
+						e.printStackTrace();
+						success=false;
+					} catch (InvocationTargetException e) {
+						//dump error
+						Toast.makeText(context,  "InvocationTargetException "+customFbDialogClass+".createDialog not found!", Toast.LENGTH_LONG);
+						e.printStackTrace();
+						success=false;
+					}
+				}
+				if(!success){
+					//fall back to FbDialog
+					new FbDialog(context, url, listener).show();
+				}
+        	} else {
+        		new FbDialog(context, url, listener).show();
+        	}
         }
     }
 

@@ -88,7 +88,7 @@ public class FbDialog extends Dialog {
                     ? DIMENSIONS_DIFF_LANDSCAPE : DIMENSIONS_DIFF_PORTRAIT;
         addContentView(mContent, new LinearLayout.LayoutParams(
                 display.getWidth() - ((int) (dimensions[0] * scale + 0.5f)),
-                display.getHeight() - ((int) (dimensions[1] * scale + 0.5f))));
+                display.getHeight()/2 - ((int) (dimensions[1] * scale + 0.5f))));
     }
 
     private void setUpTitle() {
